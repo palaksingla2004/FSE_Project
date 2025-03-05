@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const mongoose = require("mongoose");
+//const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
@@ -18,33 +18,51 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors());
 
-// MongoDB Connection
-mongoose
-  .connect("mongodb://localhost:27017/ecommercelogin", { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+// // MongoDB Connection
+// mongoose
+//   .connect("mongodb://localhost:27017/ecommercelogin", { useNewUrlParser: true, useUnifiedTopology: true })
+//   .then(() => console.log("MongoDB connected"))
+//   .catch((err) => console.error("MongoDB connection error:", err));
+const mysql = require("mysql2");
+
+// Create MySQL connection
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "ojas1804",
+  database: "my_database", // Make sure this database exists
+});
+
+db.connect((err) => {
+  if (err) {
+    console.error("MySQL connection error:", err);
+  } else {
+    console.log("Connected to MySQL!");
+  }
+});
+
 
 // User Model
-const userSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String, // For standard login. Leave blank for Google users.
-  cartData: Object,
-});
-const Users = mongoose.model("Users", userSchema);
+//const userSchema = new mongoose.Schema({
+//   name: String,
+//   email: String,
+//   password: String, // For standard login. Leave blank for Google users.
+//   cartData: Object,
+// });
+//const Users = mongoose.model("Users", userSchema);
 
 // Product Model
-const Product = mongoose.model("Product", {
-  id: { type: Number, required: true },
-  name: { type: String, required: true },
-  description: { type: String, required: true },
-  image: { type: String, required: true },
-  category: { type: String, required: true },
-  new_price: Number,
-  old_price: Number,
-  date: { type: Date, default: Date.now },
-  available: { type: Boolean, default: true },
-});
+// const Product = mongoose.model("Product", {
+//   id: { type: Number, required: true },
+//   name: { type: String, required: true },
+//   description: { type: String, required: true },
+//   image: { type: String, required: true },
+//   category: { type: String, required: true },
+//   new_price: Number,
+//   old_price: Number,
+//   date: { type: Date, default: Date.now },
+//   available: { type: Boolean, default: true },
+// });
 
 // Middleware to verify JWT
 const fetchuser = async (req, res, next) => {
