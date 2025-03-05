@@ -8,7 +8,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { OAuth2Client } = require("google-auth-library");
 const fs = require("fs");
-
+//const db = require("./db");
 
 const port = process.env.PORT || 4000;
 const GOOGLE_CLIENT_ID = "739102172608-6d69ujbfmu9jpvpqj3134f6ql1tnrcpp.apps.googleusercontent.com"; // Replace with your Google Client ID
@@ -29,8 +29,9 @@ const mysql = require("mysql2");
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "ojas1804",
-  database: "my_database", // Make sure this database exists
+  password: "P@l@k585",
+  database: "fse", // Ensure this matches your MySQL Workbench schema
+  multipleStatements: true, // Allows running multiple SQL queries at once
 });
 
 db.connect((err) => {
