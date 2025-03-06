@@ -7,13 +7,14 @@ const cookieParser = require("cookie-parser");
 const { OAuth2Client } = require("google-auth-library");
 const fs = require("fs");
 const dotenv = require("dotenv");
+const mysql = require("mysql2");
 const { User, Product, sequelize } = require("./models"); // Import Sequelize models
 
 dotenv.config(); // Load environment variables from .env file
 
 const app = express();
 const port = process.env.PORT || 4000;
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "739102172608-6d69ujbfmu9jpvpqj3134f6q11tnrcpp.apps-googleusercontent. com";
 const JWT_SECRET = process.env.JWT_SECRET || "secret_ecom";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -22,14 +23,27 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors());
 
-// Database Connection
-sequelize.sync({ alter: true })
-    .then(() => console.log("✅ Database synchronized successfully!"))
-    .catch(err => console.error("❌ Database sync error:", err));
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "P@l@k585",
+  database: "fse", // Ensure this matches your MySQL Workbench schema
+  multipleStatements: true, // Allows running multiple SQL queries at once
+});
 
-// ============================
-// 🛡️ JWT Middleware - Protect Routes
-// ============================
+db.connect((err) => {
+  if (err) {
+    console.error("❌ MySQL connection error:", err);
+  } else {
+    console.log("✅ Connected to MySQL!");
+  }
+});
+
+
+sequelize.sync({ alter: true })
+    .then(() => console.log("✅ Sequelize Database synchronized successfully!"))
+    .catch(err => console.error("❌ Sequelize Database sync error:", err));
+
 const fetchUser = async (req, res, next) => {
     const token = req.header("auth-token");
     if (!token) {
@@ -44,9 +58,6 @@ const fetchUser = async (req, res, next) => {
     }
 };
 
-// ============================
-// 📂 Image Upload (Multer)
-// ============================
 const uploadDir = "./upload/images";
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -57,11 +68,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ============================
-// 📌 Routes
-// ============================
 
-// 🔹 Upload Image
 app.post("/upload", upload.single("product"), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, message: "No file uploaded" });
@@ -70,7 +77,7 @@ app.post("/upload", upload.single("product"), (req, res) => {
 });
 app.use("/images", express.static("upload/images"));
 
-// 🔹 Google Sign-In
+
 app.post("/google-signin", async (req, res) => {
     const { token } = req.body;
     try {
@@ -97,7 +104,7 @@ app.post("/google-signin", async (req, res) => {
     }
 });
 
-// 🔹 User Signup
+
 app.post("/signup", async (req, res) => {
     const { username, email, password } = req.body;
     try {
@@ -118,7 +125,7 @@ app.post("/signup", async (req, res) => {
     }
 });
 
-// 🔹 User Login
+
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -137,7 +144,7 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// 🔹 Get All Products
+
 app.get("/allproducts", async (req, res) => {
     try {
         const products = await Product.findAll();
@@ -148,7 +155,6 @@ app.get("/allproducts", async (req, res) => {
     }
 });
 
-// 🔹 Add to Cart
 app.post("/addtocart", fetchUser, async (req, res) => {
     try {
         const { itemId } = req.body;
@@ -164,7 +170,7 @@ app.post("/addtocart", fetchUser, async (req, res) => {
     }
 });
 
-// 🔹 Remove from Cart
+
 app.post("/removefromcart", fetchUser, async (req, res) => {
     try {
         const { itemId } = req.body;
@@ -180,7 +186,7 @@ app.post("/removefromcart", fetchUser, async (req, res) => {
     }
 });
 
-// 🔹 Get Cart Data
+
 app.post("/getcart", fetchUser, async (req, res) => {
     try {
         const user = await User.findByPk(req.user.id);
@@ -191,23 +197,15 @@ app.post("/getcart", fetchUser, async (req, res) => {
     }
 });
 
-// 🔹 Get User Data
 app.get("/getuser", fetchUser, async (req, res) => {
     try {
         const user = await User.findByPk(req.user.id, { attributes: { exclude: ["password"] } });
-        if (!user) {
-            return res.status(400).json({ success: false, error: "User not found" });
-        }
         res.json({ success: true, user });
     } catch (error) {
         console.error("Get User Error:", error);
         res.status(500).json({ success: false, error: "Server error" });
     }
 });
-
-// ============================
-// 🚀 Start Server
-// ============================
 app.listen(port, () => {
     console.log(`✅ Server running on http://localhost:${port}`);
 });
